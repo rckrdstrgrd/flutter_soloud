@@ -195,6 +195,10 @@ interface class SoLoud {
   /// The sounds that are _currently being loaded_.
   Iterable<AudioSource> get activeSounds => _activeSounds;
 
+  /// State change stream
+  Stream<PlayerStateNotification> get stateChangedEvents =>
+      _controller.soLoudFFI.stateChangedEvents;
+
   /// Completers for the [loadFile] method
   @internal
   final Map<String, Completer<AudioSource>> loadedFileCompleters = {};
