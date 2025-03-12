@@ -5,6 +5,8 @@
 #define WITH_NOSOUND
 #define WITH_MINIAUDIO
 
+// #define MA_DEBUG_OUTPUT
+
 #include <AudioToolbox/AudioSession.h>
 #include <AudioToolbox/AudioToolbox.h>
 
