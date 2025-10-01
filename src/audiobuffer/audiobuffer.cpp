@@ -43,7 +43,8 @@ namespace SoLoud
 		// When using BufferType::AUTO, samplerate and channels are got from the stream. Hence we need to update them
 		// regardless of how are set by setBufferStream. But these parameters need to be set after the play
 		// function is called and the instance of this class is created.
-		if (!samplerateAlreadySet && mParent->autoTypeSamplerate != 0.f) {
+		if (!samplerateAlreadySet && mParent->autoTypeSamplerate != 0.f)
+		{
 			mBaseSamplerate = mParent->autoTypeSamplerate;
 			mSamplerate = mParent->autoTypeSamplerate;
 			mChannels = mParent->autoTypeChannels;
@@ -175,7 +176,7 @@ namespace SoLoud
 		}
 		int pos = (int)floor(mBaseSamplerate * mChannels * aSeconds);
 		mOffset = pos;
-		mStreamPosition = float(pos) / (float)(mBaseSamplerate * mChannels);
+		mStreamPosition = pos / (float)(mBaseSamplerate * mChannels);
 		return SO_NO_ERROR;
 	}
 
@@ -350,7 +351,6 @@ namespace SoLoud
 					return PlayerErrors::noError;
 				}
 			}
-			
 		}
 		else
 		{
@@ -366,12 +366,12 @@ namespace SoLoud
 			// the AudioSource will be set to use them.
 			// For the mp3 this AudioSource will impose the mp3 settings (the engine will convert to its settings).
 			auto [decoded, error] = streamDecoder->decode(buffer, &sampleRate, &channels,
-					[&](AudioMetadata meta)
-					{
-					//   meta.debug();
-						if (this->mOnMetadataCallback != nullptr)
-							this->callOnMetadataCallback(meta);
-					});
+														  [&](AudioMetadata meta)
+														  {
+															  //   meta.debug();
+															  if (this->mOnMetadataCallback != nullptr)
+																  this->callOnMetadataCallback(meta);
+														  });
 
 			// Handle decoder errors
 			switch (error)
