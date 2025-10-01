@@ -2,7 +2,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-
 import 'package:flutter_soloud/flutter_soloud.dart';
 
 class BufferBar extends StatefulWidget {

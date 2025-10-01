@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:flutter_soloud_example/buffer_stream/ui/buffer_widget.dart';
+import 'package:flutter_soloud_example/buffer_stream/ui/seek_bar.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 
@@ -93,7 +94,7 @@ class _WebRadioExampleState extends State<WebRadioExample> {
   http.Client? client;
   http.StreamedResponse? currentStream;
   bool mp3IcyMetaIntSent = false;
-
+  SoundHandle? handle;
   void parseConnectionInfo(Map<String, String> headers) {
     final info = StringBuffer();
 
@@ -210,7 +211,6 @@ class _WebRadioExampleState extends State<WebRadioExample> {
       maxBufferSizeBytes: 1024 * 1024 * 200, // 100 MB
       bufferingTimeNeeds: 3,
       format: BufferType.auto,
-      bufferingType: BufferingType.released,
       channels: Channels.stereo,
       onBuffering: (isBuffering, handle, time) async {
         // debugPrint('started buffering? $isBuffering  with '
@@ -223,7 +223,7 @@ class _WebRadioExampleState extends State<WebRadioExample> {
       },
     );
 
-    await SoLoud.instance.play(source!);
+    handle = await SoLoud.instance.play(source!);
 
     unawaited(connectToUrl(url));
   }
@@ -293,15 +293,40 @@ class _WebRadioExampleState extends State<WebRadioExample> {
                 },
                 child: const Text('stop'),
               ),
+              OutlinedButton(
+                onPressed: () async {
+                  SoLoud.instance.setPause(handle!, true);
+                },
+                child: const Text('pause'),
+              ),
+              OutlinedButton(
+                onPressed: () async {
+                  SoLoud.instance.setPause(handle!, false);
+                },
+                child: const Text('play'),
+              ),
               ValueListenableBuilder(
                 valueListenable: streamBuffering,
                 builder: (context, value, child) {
+                  const bufferingType = BufferingType.preserved;
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     spacing: 16,
                     children: [
+                      SeekBar(
+                        sound: source,
+                        onSeek: (Duration d) {
+                          if (handle == null) {
+                            print('handle is null!');
+                          }
+                          print('$d');
+                          SoLoud.instance.seek(handle!, d);
+                        },
+                        bufferingType: bufferingType,
+                        handle: handle,
+                      ),
                       BufferBar(
-                        bufferingType: BufferingType.released,
+                        bufferingType: bufferingType,
                         isBuffering: value,
                         sound: source,
                       ),
