@@ -115,7 +115,8 @@ public:
         SoLoud::time bufferingTimeNeeds,
         PCMformat pcmFormat = {44100, 2, 4, PCM_F32LE},
         dartOnBufferingCallback_t onBufferingCallback = nullptr,
-        dartOnMetadataCallback_t onMetadataCallback = nullptr);
+        dartOnMetadataCallback_t onMetadataCallback = nullptr,
+        dartOnBufferStateCallback_t onBufferStateCallback = nullptr);
 
     /// @brief Resets the buffer of the data stream.
     /// @param hash the hash of the sound.

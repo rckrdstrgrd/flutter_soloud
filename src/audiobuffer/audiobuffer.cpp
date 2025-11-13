@@ -138,6 +138,34 @@ namespace SoLoud
 			mStreamPosition = mOffset / (float)(mBaseSamplerate * mChannels);
 		}
 
+		// NEW: Check buffer state during playback for proactive sync callback
+		if (mParent->mOnBufferStateCallback != nullptr && !mParent->dataIsEnded)
+		{
+			double currentPosition = mStreamPosition;
+			double bufferLength = mParent->getLength();
+			double timeToEmpty = bufferLength - currentPosition;
+
+			bool needsBuffering = (timeToEmpty < mParent->mBufferingTimeNeeds && timeToEmpty > 0);
+			// Only fire on state transitions (to avoid spamming callbacks)
+			if (needsBuffering != mParent->mWasBuffering)
+			{
+				// Get the handle for this stream (typically only one handle per BufferStream)
+				unsigned int handle = 0;
+				if (mParent->mParent->handle.size() > 0)
+				{
+					handle = mParent->mParent->handle[0].handle;
+				}
+
+				mParent->callOnBufferStateCallback(
+					handle,
+					needsBuffering,
+					currentPosition,
+					timeToEmpty);
+
+				mParent->mWasBuffering = needsBuffering;
+			}
+		}
+
 		return samplesToRead;
 	}
 
@@ -227,7 +255,8 @@ namespace SoLoud
 		SoLoud::time bufferingTimeNeeds,
 		PCMformat pcmFormat,
 		dartOnBufferingCallback_t onBufferingCallback,
-		dartOnMetadataCallback_t onMetadataCallback)
+		dartOnMetadataCallback_t onMetadataCallback,
+		dartOnBufferStateCallback_t onBufferStateCallback)
 	{
 		/// maxBufferSize must be a number divisible by channels * sizeof(float)
 		if (maxBufferSize % (pcmFormat.channels * sizeof(float)) != 0)
@@ -259,6 +288,8 @@ namespace SoLoud
 		mBaseSamplerate = (float)pcmFormat.sampleRate;
 		mOnBufferingCallback = onBufferingCallback;
 		mOnMetadataCallback = onMetadataCallback;
+		mOnBufferStateCallback = onBufferStateCallback;
+		mWasBuffering = false;
 		buffer = std::vector<unsigned char>();
 		mBuffer.setBufferType(bufferingType);
 		mIsBuffering = true;
@@ -305,6 +336,7 @@ namespace SoLoud
 
 		buffer.clear();
 		dataIsEnded = true;
+		mWasBuffering = false;  // Reset to prevent false state transitions during seek operations
 		checkBuffering(0);
 	}
 
@@ -490,14 +522,16 @@ namespace SoLoud
 					mParent->handle[i].bufferingTime = currBufferTime + addedDataTime;
 					callOnBufferingCallback(false, handle, currBufferTime);
 				}
-			// If data is ended and the handle is paused, unpause it to listen to the rest of the data.
-			if (dataIsEnded && isPaused)
-			{
-				mThePlayer->setPause(handle, false);
-				isPaused = false;
-				mParent->handle[i].bufferingTime = MAX_DOUBLE;
-				callOnBufferingCallback(false, handle, currBufferTime);
-			}
+			// REMOVED: Auto-unpause logic when data ends
+			// This was causing unwanted auto-play when user manually paused playback
+			// before download completed. Dart side now manages pause state entirely.
+			// if (dataIsEnded && isPaused)
+			// {
+			// 	mThePlayer->setPause(handle, false);
+			// 	isPaused = false;
+			// 	mParent->handle[i].bufferingTime = MAX_DOUBLE;
+			// 	callOnBufferingCallback(false, handle, currBufferTime);
+			// }
 		}
 	}
 
@@ -549,6 +583,47 @@ namespace SoLoud
 #endif
 		}
 		mIsBuffering = isBuffering;
+	}
+
+	void BufferStream::callOnBufferStateCallback(
+		unsigned int handle,
+		bool needsBuffering,
+		double currentPosition,
+		double timeToEmpty)
+	{
+		if (mOnBufferStateCallback == nullptr)
+			return;
+
+		double bufferLength = getLength();
+		double consumptionRate = mBaseSamplerate * mChannels;
+		unsigned long bytesConsumed = mBytesConsumed;
+		unsigned long bytesBuffered = mBuffer.buffer.size();
+
+#ifdef __EMSCRIPTEN__
+		// Call the Dart callback stored on globalThis, if it exists.
+		// The `dartOnBufferStateCallback_$hash` function is created in
+		// `setBufferStream()` in `bindings_player_web.dart` and it's
+		// meant to call the Dart callback passed to `setBufferStream()`.
+		EM_ASM({
+			var functionName = "dartOnBufferStateCallback_" + $8;
+			if (typeof window[functionName] === "function") {
+				var needsBuf = $1 == 1 ? true : false;
+				window[functionName]($0, needsBuf, $2, $3, $4, $5, $6, $7);
+			} else {
+				console.log("EM_ASM 'dartOnBufferStateCallback_$hash' not found.");
+			} }, mParent->soundHash, needsBuffering, currentPosition, bufferLength, timeToEmpty, consumptionRate, bytesConsumed, bytesBuffered, mParent->soundHash);
+#else
+		mOnBufferStateCallback(
+			mParent->soundHash,
+			handle,
+			needsBuffering,
+			currentPosition,
+			bufferLength,
+			timeToEmpty,
+			consumptionRate,
+			bytesConsumed,
+			bytesBuffered);
+#endif
 	}
 
 	BufferingType BufferStream::getBufferingType()

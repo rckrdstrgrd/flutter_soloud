@@ -48,6 +48,8 @@ namespace SoLoud
     ActiveSound* mParent;
     dartOnBufferingCallback_t mOnBufferingCallback;
     dartOnMetadataCallback_t mOnMetadataCallback;
+    dartOnBufferStateCallback_t mOnBufferStateCallback;
+    bool mWasBuffering;  // Track state for edge detection
     unsigned int autoTypeChannels;
     float autoTypeSamplerate;
     unsigned int mMaxBufferSize;
@@ -75,7 +77,8 @@ namespace SoLoud
         time bufferingTimeNeeds = 2.0f, // 2 seconds of data to wait
         PCMformat pcmFormat = {44100, 2, 2, PCM_S16LE},
         dartOnBufferingCallback_t onBufferingCallback = nullptr,
-        dartOnMetadataCallback_t onMetadataCallback = nullptr);
+        dartOnMetadataCallback_t onMetadataCallback = nullptr,
+        dartOnBufferStateCallback_t onBufferStateCallback = nullptr);
     void resetBuffer();
     void setDataIsEnded();
     void setBufferIcyMetaInt(int icyMetaInt);
@@ -83,6 +86,12 @@ namespace SoLoud
     void checkBuffering(unsigned int afterAddingBytesCount);
     void callOnMetadataCallback(AudioMetadata &metadata);
     void callOnBufferingCallback(bool isBuffering, unsigned int handle, double time);
+    void callOnBufferStateCallback(
+        unsigned int handle,
+        bool needsBuffering,
+        double currentPosition,
+        double timeToEmpty
+    );
     BufferingType getBufferingType();
     virtual AudioSourceInstance *createInstance();
     SoLoud::time getLength();

@@ -220,6 +220,7 @@ class FlutterSoLoudWeb extends FlutterSoLoud {
     int format,
     OnBufferingCallbackTFunction? onBuffering,
     OnMetadataCallbackTFunction? onMetadata,
+    OnBufferStateCallbackTFunction? onBufferState,
   ) {
     final hashPtr = wasmMalloc(4); // 4 bytes for an int32
     final result = wasmSetBufferStream(
@@ -234,6 +235,7 @@ class FlutterSoLoudWeb extends FlutterSoLoud {
       // this to 1 to tell C that we have a callback.
       onBuffering == null ? 0 : 1,
       onMetadata == null ? 0 : 1,
+      onBufferState == null ? 0 : 1,
     );
     final hash = wasmGetI32Value(hashPtr, 'i32');
     final soundHash = SoundHash(hash);
@@ -267,6 +269,17 @@ class FlutterSoLoudWeb extends FlutterSoLoud {
       globalThis.setProperty(
         'dartOnMetadataCallback_$hash'.toJS,
         webMetadataCallback.toJS,
+      );
+    }
+
+    if (onBufferState != null) {
+      // Create a new JS function named `dartOnBufferStateCallback_$hash`.
+      // This is called from the C++ side in `audiobuffer.cpp` within the
+      // `getAudio()` method to provide detailed buffer state information.
+      // If you change this function name, you need to change it on the C++ side as well.
+      globalThis.setProperty(
+        'dartOnBufferStateCallback_$hash'.toJS,
+        onBufferState.toJS,
       );
     }
 

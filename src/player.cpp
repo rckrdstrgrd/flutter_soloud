@@ -346,7 +346,8 @@ PlayerErrors Player::setBufferStream(
     SoLoud::time bufferingTimeNeeds,
     PCMformat pcmFormat,
     dartOnBufferingCallback_t onBufferingCallback,
-    dartOnMetadataCallback_t onMetadataCallback)
+    dartOnMetadataCallback_t onMetadataCallback,
+    dartOnBufferStateCallback_t onBufferStateCallback)
 {
     if (!mInited)
         return backendNotInited;
@@ -360,7 +361,7 @@ PlayerErrors Player::setBufferStream(
     auto newSound = std::make_unique<ActiveSound>();
     newSound.get()->completeFileName = "";
     newSound.get()->soundHash = hash;
-    
+
     newSound.get()->sound = std::make_unique<SoLoud::BufferStream>();
 
     newSound.get()->soundType = SoundType::TYPE_BUFFER_STREAM;
@@ -371,7 +372,8 @@ PlayerErrors Player::setBufferStream(
         bufferingTimeNeeds,
         pcmFormat,
         onBufferingCallback,
-        onMetadataCallback);
+        onMetadataCallback,
+        onBufferStateCallback);
 
     newSound.get()->filters = std::make_unique<Filters>(&soloud, newSound.get());
     sounds.push_back(std::move(newSound));

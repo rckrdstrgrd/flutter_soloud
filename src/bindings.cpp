@@ -441,7 +441,8 @@ extern "C"
         unsigned int channels,
         int format,
         dartOnBufferingCallback_t onBufferingCallback,
-        dartOnMetadataCallback_t onMetadataCallback)
+        dartOnMetadataCallback_t onMetadataCallback,
+        dartOnBufferStateCallback_t onBufferStateCallback)
     {
         std::lock_guard<std::mutex> guard_init(init_deinit_mutex);
         std::lock_guard<std::mutex> guard_load(loadMutex);
@@ -478,7 +479,8 @@ extern "C"
             bufferingTimeNeeds,
             dataType,
             onBufferingCallback,
-            onMetadataCallback);
+            onMetadataCallback,
+            onBufferStateCallback);
         return e;
     }
 

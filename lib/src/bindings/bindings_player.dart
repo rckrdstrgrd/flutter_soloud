@@ -23,6 +23,20 @@ typedef OnMetadataCallbackTFunction = void Function(
   dynamic metadata,
 );
 
+/// Callback set in `setBufferStream` for the `onBufferState` closure.
+/// Provides detailed buffer state information for multi-handle synchronization.
+typedef OnBufferStateCallbackTFunction = void Function(
+  int soundHash,
+  int handle,
+  bool needsBuffering,
+  double currentPosition,
+  double bufferLength,
+  double timeToEmpty,
+  double consumptionRate,
+  int bytesConsumed,
+  int bytesBuffered,
+);
+
 /// Abstract class defining the interface for the platform-specific
 /// implementations.
 abstract class FlutterSoLoud {
@@ -160,6 +174,7 @@ abstract class FlutterSoLoud {
     int format,
     OnBufferingCallbackTFunction? onBuffering,
     OnMetadataCallbackTFunction? onMetadata,
+    OnBufferStateCallbackTFunction? onBufferState,
   );
 
   /// Reset the buffer of the audio stream.

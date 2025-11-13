@@ -665,6 +665,10 @@ interface class SoLoud {
   /// [onMetadata] Callback triggered when starting to add audio data or when
   /// metadata changes while streaming. It returns a `[AudioMetadata] object.
   ///
+  /// [onBufferState] Callback triggered with detailed buffer state information
+  /// for multi-handle synchronization. Provides proactive early warning when
+  /// buffer is getting low (before exhaustion).
+  ///
   /// Throws [SoLoudNotInitializedException] if the engine is not initialized.
   AudioSource setBufferStream({
     int? maxBufferSizeBytes,
@@ -676,6 +680,17 @@ interface class SoLoud {
     BufferType format = BufferType.s16le,
     void Function(bool isBuffering, int handle, double time)? onBuffering,
     void Function(AudioMetadata)? onMetadata,
+    void Function(
+      int soundHash,
+      int handle,
+      bool needsBuffering,
+      double currentPosition,
+      double bufferLength,
+      double timeToEmpty,
+      double consumptionRate,
+      int bytesConsumed,
+      int bytesBuffered,
+    )? onBufferState,
   }) {
     if (!isInitialized) {
       throw const SoLoudNotInitializedException();
@@ -720,6 +735,7 @@ interface class SoLoud {
                       : (metadata as NativeAudioMetadata).toAudioMetadata();
                   onMetadata(data);
                 },
+          onBufferState,
         );
 
     if (ret.error != PlayerErrors.noError) {

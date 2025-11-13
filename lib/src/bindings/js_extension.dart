@@ -65,6 +65,7 @@ external int wasmSetBufferStream(
   int format,
   int onBufferingPtr,
   int onMetadataPtr,
+  int onBufferStatePtr,
 );
 
 @JS('Module_soloud._resetBufferStream')

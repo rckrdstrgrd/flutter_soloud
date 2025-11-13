@@ -151,4 +151,17 @@ typedef struct PCMformat
 // callback to tell dart that we are buffering/unbuffering
 typedef void (*dartOnBufferingCallback_t)(bool isBuffering, unsigned int handle, double time);
 
+// callback to tell dart the detailed buffer state for synchronization
+typedef void (*dartOnBufferStateCallback_t)(
+    unsigned int soundHash,        // Which BufferStream
+    unsigned int handle,           // The voice handle
+    bool needsBuffering,           // true = buffer critically low, false = recovered
+    double currentPosition,        // Current playback position (seconds)
+    double bufferLength,           // Total buffered audio available (seconds)
+    double timeToEmpty,            // Estimated seconds until buffer exhaustion
+    double consumptionRate,        // Samples/second being consumed
+    unsigned long bytesConsumed,   // Total bytes consumed so far
+    unsigned long bytesBuffered    // Current buffer size in bytes
+);
+
 #endif // ENUMS_H

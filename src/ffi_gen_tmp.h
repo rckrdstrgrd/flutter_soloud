@@ -30,4 +30,5 @@
         unsigned int channels,
         int format,
         dartOnBufferingCallback_t onBufferingCallback,
-        dartOnMetadataCallback_t onMetadataCallback);
+        dartOnMetadataCallback_t onMetadataCallback,
+        dartOnBufferStateCallback_t onBufferStateCallback);
